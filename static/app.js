@@ -40,6 +40,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeCheckbox = document.getElementById('theme-checkbox');
     
     // ==========================================
+    // Security Sanitization
+    // ==========================================
+    function sanitizeHTML(html) {
+        if (!html) return '';
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Remove potentially executable or loading tags
+        const forbiddenTags = ['script', 'style', 'iframe', 'frame', 'object', 'embed', 'link', 'meta', 'applet', 'base'];
+        forbiddenTags.forEach(tag => {
+            const elements = tempDiv.querySelectorAll(tag);
+            elements.forEach(el => el.remove());
+        });
+        
+        // Remove dangerous attributes (event listeners and javascript/data links)
+        const allElements = tempDiv.querySelectorAll('*');
+        allElements.forEach(el => {
+            Array.from(el.attributes).forEach(attr => {
+                const name = attr.name.toLowerCase();
+                const value = attr.value.trim().toLowerCase();
+                
+                if (name.startsWith('on')) {
+                    el.removeAttribute(attr.name);
+                } else if (name === 'href' || name === 'src') {
+                    if (value.startsWith('javascript:') || value.startsWith('data:') || value.startsWith('vbscript:')) {
+                        el.removeAttribute(attr.name);
+                    }
+                }
+            });
+        });
+        
+        return tempDiv.innerHTML;
+    }
+
+    // ==========================================
     // Theme Management
     // ==========================================
     function initTheme() {
@@ -133,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Categorization logic based on h3 headers inside content
     function extractCategoriesFromHtml(contentHtml) {
         const parser = new DOMParser();
-        const doc = parser.parseFromString(contentHtml, 'text/html');
+        const doc = parser.parseFromString(sanitizeHTML(contentHtml), 'text/html');
         const h3Headers = doc.querySelectorAll('h3');
         const cats = [];
         
@@ -323,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 
                 <div class="card-body">
-                    ${release.content}
+                    ${sanitizeHTML(release.content)}
                 </div>
                 
                 <div class="card-actions">
@@ -518,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function tweetRelease(release) {
         // Parse HTML to extract plain text
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = release.content;
+        tempDiv.innerHTML = sanitizeHTML(release.content);
         
         // Remove headers
         const h3s = tempDiv.querySelectorAll('h3');
@@ -639,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function copyReleaseText(release) {
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = release.content;
+        tempDiv.innerHTML = sanitizeHTML(release.content);
         
         // Remove h3 elements if present
         const h3s = tempDiv.querySelectorAll('h3');
@@ -671,7 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Rows
         const rows = filteredReleases.map(release => {
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = release.content;
+            tempDiv.innerHTML = sanitizeHTML(release.content);
             const plainText = tempDiv.textContent || tempDiv.innerText || '';
             const cleanText = plainText.replace(/\s+/g, ' ').trim();
             

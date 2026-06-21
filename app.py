@@ -93,6 +93,24 @@ def api_releases():
             'message': str(e)
         }), 500
 
+@app.after_request
+def add_security_headers(response):
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self';"
+    )
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    return response
+
 if __name__ == '__main__':
-    # Run in debug mode locally
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Run locally bound to localhost to secure the Werkzeug interactive debugger
+    app.run(host='127.0.0.1', port=5000, debug=True)
