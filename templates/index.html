@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A premium dashboard for tracking and analyzing Google Cloud BigQuery Release Notes in real time. Filter, search, and bookmark updates.">
+    <title>BigQuery Release Notes Explorer</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Local CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    <div class="glow-sphere sphere-1"></div>
+    <div class="glow-sphere sphere-2"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-main">
+                <div class="logo-area">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <h1>BigQuery <span>Releases</span></h1>
+                        <p class="tagline">Interactive feed for Google Cloud BigQuery updates</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <div id="cache-badge" class="cache-badge hidden">
+                        <span class="indicator"></span>
+                        <span class="text">Cached Data</span>
+                    </div>
+                    
+                    <button id="refresh-btn" class="action-btn" title="Refresh feed" aria-label="Refresh feed">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon-refresh">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                        </svg>
+                    </button>
+                    
+                    <button id="theme-toggle" class="action-btn" title="Toggle Theme" aria-label="Toggle Theme">
+                        <!-- Sun Icon (visible in dark theme) -->
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="sun-icon">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <!-- Moon Icon (visible in light theme) -->
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="moon-icon">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats dashboard dashboard-grid -->
+            <div class="stats-dashboard">
+                <div class="stat-card" id="stat-total">
+                    <div class="stat-icon total">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Releases</span>
+                        <h2 class="stat-value" id="val-total">-</h2>
+                    </div>
+                </div>
+                
+                <div class="stat-card" id="stat-features">
+                    <div class="stat-icon feature">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Features</span>
+                        <h2 class="stat-value" id="val-features">-</h2>
+                    </div>
+                </div>
+
+                <div class="stat-card" id="stat-announcements">
+                    <div class="stat-icon announcement">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Announcements</span>
+                        <h2 class="stat-value" id="val-announcements">-</h2>
+                    </div>
+                </div>
+
+                <div class="stat-card" id="stat-issues">
+                    <div class="stat-icon issue">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Issues & Alerts</span>
+                        <h2 class="stat-value" id="val-issues">-</h2>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="filter-section">
+                    <h3 class="section-title">Search & Filter</h3>
+                    
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="Search keywords..." autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3 class="section-title">Update Categories</h3>
+                    <div class="category-filters" id="category-filters-container">
+                        <!-- Dynamic Checkboxes -->
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3 class="section-title">Timeframe</h3>
+                    <div class="timeframe-filters">
+                        <label class="radio-btn">
+                            <input type="radio" name="timeframe" value="all" checked>
+                            <span>All Updates</span>
+                        </label>
+                        <label class="radio-btn">
+                            <input type="radio" name="timeframe" value="7">
+                            <span>Last 7 Days</span>
+                        </label>
+                        <label class="radio-btn">
+                            <input type="radio" name="timeframe" value="30">
+                            <span>Last 30 Days</span>
+                        </label>
+                        <label class="radio-btn">
+                            <input type="radio" name="timeframe" value="90">
+                            <span>Last 90 Days</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3 class="section-title">Preferences</h3>
+                    <div class="preference-filters">
+                        <label class="toggle-btn">
+                            <input type="checkbox" id="bookmark-filter">
+                            <span class="slider"></span>
+                            <span class="toggle-label">Bookmarked only</span>
+                            <span class="badge" id="bookmark-count">0</span>
+                        </label>
+                        <label class="toggle-btn">
+                            <input type="checkbox" id="unread-filter">
+                            <span class="slider"></span>
+                            <span class="toggle-label">Unread only</span>
+                            <span class="badge" id="unread-count">0</span>
+                        </label>
+                    </div>
+                    <div class="bulk-actions">
+                        <button id="mark-all-read" class="text-action-btn">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Mark all read
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Cards Feed Area -->
+            <section class="feed-area">
+                <div class="feed-header">
+                    <div class="feed-summary">
+                        <span id="results-count">Showing - of - releases</span>
+                    </div>
+                    <div class="sort-selector">
+                        <label for="sort-select">Sort by</label>
+                        <select id="sort-select">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Feed Cards Stack -->
+                <div id="releases-stack" class="releases-stack">
+                    <!-- Skeletons while loading -->
+                    <div class="skeleton-card">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-badges">
+                            <div class="skeleton-badge"></div>
+                            <div class="skeleton-badge"></div>
+                        </div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line short"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-badges">
+                            <div class="skeleton-badge"></div>
+                        </div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state hidden">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </div>
+                    <h3>No releases found</h3>
+                    <p>Try resetting your filters or typing a different search query.</p>
+                    <button id="reset-filters-btn" class="primary-btn">Reset Filters</button>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Toast System -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>BigQuery Release Notes Explorer &bull; Powered by Google Cloud RSS Feed &bull; Built with Flask &amp; Vanilla HTML/CSS/JS</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
