@@ -47,9 +47,9 @@
                         </svg>
                     </button>
                     
-                    <button id="theme-toggle" class="action-btn" title="Toggle Theme" aria-label="Toggle Theme">
-                        <!-- Sun Icon (visible in dark theme) -->
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="sun-icon">
+                    <!-- Simple switch for changing color scheme -->
+                    <div class="theme-switch-container" title="Toggle Theme">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="theme-icon sun-icon-small">
                             <circle cx="12" cy="12" r="5"></circle>
                             <line x1="12" y1="1" x2="12" y2="3"></line>
                             <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -60,11 +60,14 @@
                             <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
                             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                         </svg>
-                        <!-- Moon Icon (visible in light theme) -->
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="moon-icon">
+                        <label class="switch">
+                            <input type="checkbox" id="theme-checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="theme-icon moon-icon-small">
                             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                         </svg>
-                    </button>
+                    </div>
                 </div>
             </div>
 
@@ -196,6 +199,14 @@
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                             Mark all read
+                        </button>
+                        <button id="export-csv" class="text-action-btn" style="margin-top: 0.65rem; display: flex;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Export to CSV
                         </button>
                     </div>
                 </div>

@@ -34,9 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookmarkCountBadge = document.getElementById('bookmark-count');
     const unreadCountBadge = document.getElementById('unread-count');
     const markAllReadBtn = document.getElementById('mark-all-read');
+    const exportCsvBtn = document.getElementById('export-csv');
     
-    // Theme toggle
-    const themeToggle = document.getElementById('theme-toggle');
+    // Theme checkbox
+    const themeCheckbox = document.getElementById('theme-checkbox');
     
     // ==========================================
     // Theme Management
@@ -45,20 +46,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('theme');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         
+        let isDark = true;
         if (savedTheme === 'light' || (!savedTheme && !systemPrefersDark)) {
-            document.documentElement.setAttribute('data-theme', 'light');
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
+            isDark = false;
+        }
+        
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        if (themeCheckbox) {
+            themeCheckbox.checked = isDark;
         }
     }
     
-    themeToggle.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        showToast(`Switched to ${newTheme} mode`, 'info');
-    });
+    if (themeCheckbox) {
+        themeCheckbox.addEventListener('change', () => {
+            const isDark = themeCheckbox.checked;
+            const newTheme = isDark ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            showToast(`Switched to ${newTheme} mode`, 'info');
+        });
+    }
 
     // ==========================================
     // Fetch and Load Data
@@ -338,6 +345,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     
                     <div class="card-action-right">
+                        <button class="btn-icon btn-copy" title="Copy text content" aria-label="Copy content">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                            </svg>
+                        </button>
+
                         <button class="btn-icon btn-tweet" title="Share on X (Twitter)" aria-label="Share on X">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
@@ -381,6 +395,11 @@ document.addEventListener('DOMContentLoaded', () => {
             card.querySelector('.btn-tweet').addEventListener('click', (e) => {
                 e.stopPropagation();
                 tweetRelease(release);
+            });
+
+            card.querySelector('.btn-copy').addEventListener('click', (e) => {
+                e.stopPropagation();
+                copyReleaseText(release);
             });
             
             // Clicking card background automatically marks it as read
@@ -618,6 +637,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
+    function copyReleaseText(release) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = release.content;
+        
+        // Remove h3 elements if present
+        const h3s = tempDiv.querySelectorAll('h3');
+        h3s.forEach(h3 => h3.remove());
+        
+        const plainText = tempDiv.textContent || tempDiv.innerText || "";
+        const cleanText = plainText.replace(/\s+/g, ' ').trim();
+        
+        const categoriesText = release.categories.map(c => `[${c}]`).join(' ');
+        const formattedText = `BigQuery Update - ${release.title} ${categoriesText}\n\n${cleanText}\n\nRead more: ${release.link}`;
+        
+        navigator.clipboard.writeText(formattedText).then(() => {
+            showToast('Update text copied to clipboard', 'success');
+        }).catch(err => {
+            console.error('Clipboard text copy failed:', err);
+            showToast('Failed to copy update text', 'error');
+        });
+    }
+
+    function exportToCSV() {
+        if (filteredReleases.length === 0) {
+            showToast('No releases to export', 'info');
+            return;
+        }
+        
+        // Headers
+        const headers = ['Date', 'Categories', 'Description', 'Link'];
+        
+        // Rows
+        const rows = filteredReleases.map(release => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = release.content;
+            const plainText = tempDiv.textContent || tempDiv.innerText || '';
+            const cleanText = plainText.replace(/\s+/g, ' ').trim();
+            
+            return [
+                release.title,
+                release.categories.join('; '),
+                cleanText,
+                release.link
+            ];
+        });
+        
+        // Helper to escape values
+        const csvContent = [headers, ...rows].map(e => e.map(val => {
+            if (val === null || val === undefined) return '""';
+            const str = String(val).replace(/"/g, '""');
+            return `"${str}"`;
+        }).join(',')).join('\n');
+        
+        // Trigger browser download with UTF-8 BOM
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `bigquery_release_notes_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast('CSV exported successfully', 'success');
+    }
+
     // ==========================================
     // Attach Global Event Listeners
     // ==========================================
@@ -626,6 +712,9 @@ document.addEventListener('DOMContentLoaded', () => {
     bookmarkFilter.addEventListener('change', applyFilters);
     unreadFilter.addEventListener('change', applyFilters);
     markAllReadBtn.addEventListener('click', markAllRead);
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', exportToCSV);
+    }
     resetFiltersBtn.addEventListener('click', resetFilters);
     
     timeframeRadios.forEach(radio => {
